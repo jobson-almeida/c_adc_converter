@@ -61,6 +61,29 @@ void button_interruption_gpio_irq_handler(uint gpio, uint32_t events)
   gpio_acknowledge_irq(gpio, events); // limpa a interrupção
 }
 
+// configuração que permite aos LEDs terem seu brilho máximo quando o valor ADC atigir seus extremos, 0 e 4095
+// e quanto mais pŕoximos do centro, menor o seu brilho
+uint remap_led_level(uint adc_value)
+{
+  int32_t level = 0;
+  if (adc_value > 2048)
+    level = (adc_value - 2048) * (4096 / 2047.0);
+  else
+    level = (2048 - adc_value) * (4096 / 2047.0);
+
+  // printf("%d\n", level); // DEBUGGING
+
+  if (level <= 250)
+    // condicional valór mínimo - posição neutra do jotstick - ajuste no brilho inicial dos LEDs
+    return level = 0;
+
+  if (level > 4096)
+    // condicional valor máximo
+    return level = 4096;
+
+  return level;
+}
+
 // Função para configurar o joystick (pinos de leitura e ADC)
 void setup_joystick()
 {
@@ -138,8 +161,8 @@ int main()
   {
     joystick_read_axis(&vrx_value, &vry_value); // Lê os valores dos eixos do joystick
     // Ajusta os níveis PWM dos LEDs de acordo com os valores do joystick
-    pwm_set_gpio_level(LED_B, vrx_value); // Ajusta o brilho do LED azul com o valor do eixo X
-    pwm_set_gpio_level(LED_R, vry_value); // Ajusta o brilho do LED vermelho com o valor do eixo Y
+    pwm_set_gpio_level(LED_B, remap_led_level(vrx_value)); // Ajusta o brilho do LED azul com o valor do eixo X
+    pwm_set_gpio_level(LED_R, remap_led_level(vry_value)); // Ajusta o brilho do LED vermelho com o valor do eixo Y
 
     // Pequeno delay antes da próxima leitura
     sleep_ms(100); // Espera 100 ms antes de repetir o ciclo
