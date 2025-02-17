@@ -4,6 +4,7 @@
 #include "hardware/adc.h" // Biblioteca para manipulação do ADC no RP2040
 #include "hardware/irq.h" // Biblioteca para controle de interrupções no RP2040
 #include "hardware/pwm.h" // Biblioteca para controle de PWM no RP2040
+#include "lib/ssd1306.h"  // Biblioteca de configuração e controle do SSD1306
 
 // Definição dos pinos usados para o joystick e LEDs
 #define VRX 26          // Pino de leitura do eixo X do joystick (conectado ao ADC)

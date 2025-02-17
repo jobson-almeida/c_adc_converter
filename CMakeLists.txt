@@ -35,7 +35,7 @@ pico_sdk_init()
 
 # Add executable. Default name is the project name, version 0.1
 
-add_executable(adc_converter adc_converter.c )
+add_executable(adc_converter adc_converter.c lib/ssd1306.c)
 
 pico_set_program_name(adc_converter "adc_converter")
 pico_set_program_version(adc_converter "0.1")
@@ -58,6 +58,7 @@ target_link_libraries(adc_converter
         hardware_adc
         hardware_pwm
         hardware_irq
+        hardware_i2c
         )
 
 pico_add_extra_outputs(adc_converter)
