@@ -33,6 +33,7 @@ uint slice_led_b, slice_led_r;           // Variáveis para armazenar os slices 
 uint32_t last_time = 0;                  // variável de tempo, auxiliar À comtramedida deboucing
 ssd1306_t ssd;                           // instância do display SSD1306
 
+volatile bool first_edge = true; // variável auxiliar que define qual borda está ativa no display
 volatile bool pwm_status = true; // variável auxiliar que define o status do PWM dos LEDs vermelho e azul
 
 // handler de interrupção dos botões
@@ -169,6 +170,17 @@ void joystick_read_axis(uint16_t *vrx_value, uint16_t *vry_value)
   *vry_value = adc_read();         // Lê o valor do eixo Y (0-4095)
 }
 
+// função que desenha uma moldura no centro do display
+void frame_in_display(uint8_t y, uint8_t x)
+{
+
+  ssd1306_fill(&ssd, false);                      // Limpa o display
+  ssd1306_rect(&ssd, 1, 1, 127, 63, true, false); // Desenha a borda mais externa da moldura
+  ssd1306_rect(&ssd, 3, 3, 123, 59, true, false); // Desenha a borda central da moldura
+  ssd1306_rect(&ssd, 5, 5, 119, 55, true, false); // Desenha a borda interna da moldura
+  ssd1306_send_data(&ssd);                        // Atualiza o display
+}
+
 // Função principal
 int main()
 {
@@ -188,6 +200,9 @@ int main()
     // Ajusta os níveis PWM dos LEDs de acordo com os valores do joystick
     pwm_set_gpio_level(LED_B, remap_led_level(vrx_value)); // Ajusta o brilho do LED azul com o valor do eixo X
     pwm_set_gpio_level(LED_R, remap_led_level(vry_value)); // Ajusta o brilho do LED vermelho com o valor do eixo Y
+
+    // desenha no display uma moldura com um cursor (um retângulo 8x8) no centro do display
+    frame_in_display(vrx_value, vrx_value);
 
     // Pequeno delay antes da próxima leitura
     sleep_ms(100); // Espera 100 ms antes de repetir o ciclo
