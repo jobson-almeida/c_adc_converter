@@ -31,6 +31,7 @@ const uint16_t PERIOD = 4096;   // Período do PWM (valor máximo do contador)
 uint16_t led_b_level, led_r_level = 100; // Inicialização dos níveis de PWM para os LEDs
 uint slice_led_b, slice_led_r;           // Variáveis para armazenar os slices de PWM correspondentes aos LEDs
 uint32_t last_time = 0;                  // variável de tempo, auxiliar À comtramedida deboucing
+ssd1306_t ssd;                           // instância do display SSD1306
 
 volatile bool pwm_status = true; // variável auxiliar que define o status do PWM dos LEDs vermelho e azul
 
@@ -90,6 +91,21 @@ uint remap_led_level(uint adc_value)
   return level;
 }
 
+void setup_i2c()
+{
+  // initializa a I2C usando 400Khz.
+  i2c_init(I2C_PORT, 400 * 1000);
+
+  gpio_set_function(I2C_SDA, GPIO_FUNC_I2C); // define o SDA utilizando a função de GPIO para I2C
+  gpio_set_function(I2C_SCL, GPIO_FUNC_I2C); // define o SCL utilizando a função de GPIO para I2C
+  gpio_pull_up(I2C_SDA);                     // define o pull up da linha de dados
+  gpio_pull_up(I2C_SCL);                     // define o pull up na linha do clock
+
+  ssd1306_init(&ssd, WIDTH, HEIGHT, false, IC2_ADDRESS, I2C_PORT); // Inicializa o display
+  ssd1306_config(&ssd);                                            // configura o display
+  ssd1306_send_data(&ssd);                                         // envia os dados para o display
+}
+
 // Função para configurar o joystick (pinos de leitura e ADC)
 void setup_joystick()
 {
@@ -118,8 +134,10 @@ void setup_pwm_led(uint led, uint *slice, uint16_t level)
 // Função de configuração geral
 void setup()
 {
-  stdio_init_all();                                // Inicializa a porta serial para saída de dados
-  setup_joystick();                                // Chama a função de configuração do joystick
+  stdio_init_all(); // Inicializa a porta serial para saída de dados
+  setup_joystick(); // Chama a função de configuração do joystick
+  setup_i2c();      // Configura e inicializa o I2C
+
   setup_pwm_led(LED_B, &slice_led_b, led_b_level); // Configura o PWM para o LED azul
   setup_pwm_led(LED_R, &slice_led_r, led_r_level); // Configura o PWM para o LED vermelho
 
