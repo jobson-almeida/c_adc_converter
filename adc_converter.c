@@ -91,6 +91,7 @@ uint remap_led_level(uint adc_value)
   return level;
 }
 
+// configura e inicializa o I2C
 void setup_i2c()
 {
   // initializa a I2C usando 400Khz.
