@@ -147,17 +147,17 @@ void joystick_read_axis(uint16_t *vrx_value, uint16_t *vry_value)
   *vry_value = adc_read();         // lê o valor do eixo Y (0-4095)
 }
 
-// função que desenha uma moldura no centro do display
-// void frame_in_display(uint8_t y, uint8_t x)
-// {
-
-//   ssd1306_fill(&ssd, false);                            // limpa o display
-//   ssd1306_rect(&ssd, y, x, 8, 8, true, true);           // Desenha o cursor
-//   ssd1306_rect(&ssd, 1, 1, 127, 63, true, false);       // desenha a borda mais externa da moldura
-//   ssd1306_rect(&ssd, 3, 3, 123, 59, hided_edge, false); // desenha a borda central da moldura
-//   ssd1306_rect(&ssd, 5, 5, 119, 55, true, false);       // desenha a borda interna da moldura
-//   ssd1306_send_data(&ssd);                              // aplica os novos dados e atualiza o display
-// }
+// função que desenha uma moldura com um cursor no centro do display
+void cursor_in_frame(uint8_t x, uint8_t y)
+{
+  // desenha no display uma moldura com um cursor (um retângulo 8x8) no centro do display
+  ssd1306_fill(&ssd, false);                            // limpa o display
+  ssd1306_rect(&ssd, y, x, 8, 8, true, true);           // Desenha o cursor
+  ssd1306_rect(&ssd, 1, 1, 127, 63, true, false);       // desenha a borda mais externa da moldura
+  ssd1306_rect(&ssd, 3, 3, 123, 59, hided_edge, false); // desenha a borda central da moldura
+  ssd1306_rect(&ssd, 5, 5, 119, 55, true, false);       // desenha a borda interna da moldura
+  ssd1306_send_data(&ssd);                              // aplica os novos dados e atualiza o display
+}
 
 // Função de configuração geral
 void setup()
@@ -202,7 +202,7 @@ int main()
     pwm_set_gpio_level(LED_B, remap_led_level(vrx_value)); // Ajusta o brilho do LED azul com o valor do eixo X
     pwm_set_gpio_level(LED_R, remap_led_level(vry_value)); // Ajusta o brilho do LED vermelho com o valor do eixo Y
 
-    // ajuste de 4095 -> 4084 e 119 -> (127-8) 8 equivalente ao cursor /////////////////////////////////////////
+    // ajuste de 4095 -> 4084 e 119 -> (127-8) 8 equivalente ao cursor
     // OBS: os eixos da minha placa estão invertidos
     int x_cursor = (int)(((float)vry_value / 4084.0) * 119.0);
 
@@ -210,15 +210,12 @@ int main()
     // é subtraído o valor de 55 para inverter o movimento do cursor no eixo y
     int y_cursor = (int)(55 - (((float)vrx_value / 4082.0) * 55.0));
 
-    // desenha no display uma moldura com um cursor (um retângulo 8x8) no centro do display
-    ssd1306_fill(&ssd, false);                                // limpa o display
-    ssd1306_rect(&ssd, y_cursor, x_cursor, 8, 8, true, true); // Desenha o cursor
-    ssd1306_rect(&ssd, 1, 1, 127, 63, true, false);           // desenha a borda mais externa da moldura
-    ssd1306_rect(&ssd, 3, 3, 123, 59, hided_edge, false);     // desenha a borda central da moldura
-    ssd1306_rect(&ssd, 5, 5, 119, 55, true, false);           // desenha a borda interna da moldura
-    ssd1306_send_data(&ssd);
+    // chama a função que desenha no display a moldura e o cursor
+    cursor_in_frame(x_cursor, y_cursor);
 
     // pequeno delay antes da próxima leitura
     sleep_ms(100); // Espera 100 ms antes de repetir o ciclo
   }
+
+  return 0; // boas práticas
 }
