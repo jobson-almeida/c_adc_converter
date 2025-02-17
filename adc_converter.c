@@ -38,6 +38,7 @@ void button_interruption_gpio_irq_handler(uint gpio, uint32_t events)
     if (gpio_get(BUTTON_BOOT) == 0)
     {
       // habilita o bootsel da placa - reinicia em modo gravação
+      reset_usb_boot(0, 0);
     }
 
     if (gpio_get(BUTTON_A) == 0)
