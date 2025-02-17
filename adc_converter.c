@@ -1,21 +1,21 @@
-#include <stdio.h>        // Biblioteca padrão de entrada e saída
-#include "pico/stdlib.h"  // Biblioteca padrão do Raspberry Pi Pico
-#include "pico/bootrom.h" // Biblioteca de acesso a funções e dados no bootrom
-#include "hardware/adc.h" // Biblioteca para manipulação do ADC no RP2040
-#include "hardware/irq.h" // Biblioteca para controle de interrupções no RP2040
-#include "hardware/pwm.h" // Biblioteca para controle de PWM no RP2040
-#include "lib/ssd1306.h"  // Biblioteca de configuração e controle do SSD1306
+#include <stdio.h>        // biblioteca padrão de entrada e saída
+#include "pico/stdlib.h"  // biblioteca padrão do Raspberry Pi Pico
+#include "pico/bootrom.h" // biblioteca de acesso a funções e dados no bootrom
+#include "hardware/adc.h" // biblioteca para manipulação do ADC no RP2040
+#include "hardware/irq.h" // biblioteca para controle de interrupções no RP2040
+#include "hardware/pwm.h" // biblioteca para controle de PWM no RP2040
+#include "lib/ssd1306.h"  // biblioteca de configuração e controle do SSD1306
 
 // Definição dos pinos usados para o joystick e LEDs
-#define VRX 26          // Pino de leitura do eixo X do joystick (conectado ao ADC)
-#define VRY 27          // Pino de leitura do eixo Y do joystick (conectado ao ADC)
-#define ADC_CHANNEL_0 0 // Canal ADC para o eixo X do joystick
-#define ADC_CHANNEL_1 1 // Canal ADC para o eixo Y do joystick
-#define SW 22           // Pino de leitura do botão do joystick
+#define VRX 26          // pino de leitura do eixo X do joystick (conectado ao ADC)
+#define VRY 27          // pino de leitura do eixo Y do joystick (conectado ao ADC)
+#define ADC_CHANNEL_0 0 // canal ADC para o eixo X do joystick
+#define ADC_CHANNEL_1 1 // canal ADC para o eixo Y do joystick
+#define SW 22           // pino de leitura do botão do joystick
 
-#define LED_G 11 // Pino para controle do LED verde
-#define LED_B 12 // Pino para controle do LED azul via PWM
-#define LED_R 13 // Pino para controle do LED vermelho via PWM
+#define LED_G 11 // pino para controle do LED verde
+#define LED_B 12 // pino para controle do LED azul via PWM
+#define LED_R 13 // pino para controle do LED vermelho via PWM
 
 #define BUTTON_BOOT 6 // GPIO definida para uso do botão de bootsel - entrar em modo gravação
 #define BUTTON_A 5    // GPIO definida para o botão com a função de habilitar e desabilitar o PWM nos LEDs vermelho e azul
@@ -25,11 +25,11 @@
 #define I2C_SCL 15       // GPIO definida para transmissão do clock do I2C
 #define IC2_ADDRESS 0x3C // endereço do display SSD1306
 
-const float DIVIDER_PWM = 16.0; // Divisor fracional do clock para o PWM
-const uint16_t PERIOD = 4096;   // Período do PWM (valor máximo do contador)
+const float DIVIDER_PWM = 16.0; // divisor fracional do clock para o PWM
+const uint16_t PERIOD = 4096;   // período do PWM (valor máximo do contador)
 
-uint16_t led_b_level, led_r_level = 100; // Inicialização dos níveis de PWM para os LEDs
-uint slice_led_b, slice_led_r;           // Variáveis para armazenar os slices de PWM correspondentes aos LEDs
+uint16_t led_b_level, led_r_level = 100; // inicialização dos níveis de PWM para os LEDs
+uint slice_led_b, slice_led_r;           // variáveis para armazenar os slices de PWM correspondentes aos LEDs
 uint32_t last_time = 0;                  // variável de tempo, auxiliar À comtramedida deboucing
 ssd1306_t ssd;                           // instância do display SSD1306
 
@@ -103,45 +103,71 @@ void setup_i2c()
   gpio_pull_up(I2C_SDA);                     // define o pull up da linha de dados
   gpio_pull_up(I2C_SCL);                     // define o pull up na linha do clock
 
-  ssd1306_init(&ssd, WIDTH, HEIGHT, false, IC2_ADDRESS, I2C_PORT); // Inicializa o display
+  ssd1306_init(&ssd, WIDTH, HEIGHT, false, IC2_ADDRESS, I2C_PORT); // inicializa o display
   ssd1306_config(&ssd);                                            // configura o display
   ssd1306_send_data(&ssd);                                         // envia os dados para o display
 }
 
-// Função para configurar o joystick (pinos de leitura e ADC)
+// função para configurar o joystick (pinos de leitura e ADC)
 void setup_joystick()
 {
-  // Inicializa o ADC e os pinos de entrada analógica
-  adc_init();         // Inicializa o módulo ADC
-  adc_gpio_init(VRX); // Configura o pino VRX (eixo X) para entrada ADC
-  adc_gpio_init(VRY); // Configura o pino VRY (eixo Y) para entrada ADC
+  // inicializa o ADC e os pinos de entrada analógica
+  adc_init();         // inicializa o módulo ADC
+  adc_gpio_init(VRX); // configura o pino VRX (eixo X) para entrada ADC
+  adc_gpio_init(VRY); // configura o pino VRY (eixo Y) para entrada ADC
 
-  // Inicializa o pino do botão do joystick
-  gpio_init(SW);             // Inicializa o pino do botão
-  gpio_set_dir(SW, GPIO_IN); // Configura o pino do botão como entrada
-  gpio_pull_up(SW);          // Ativa o pull-up no pino do botão para evitar flutuações
+  // inicializa o pino do botão do joystick
+  gpio_init(SW);             // inicializa o pino do botão
+  gpio_set_dir(SW, GPIO_IN); // configura o pino do botão como entrada
+  gpio_pull_up(SW);          // ativa o pull-up no pino do botão para evitar flutuações
 }
 
-// Função para configurar o PWM de um LED (genérica para azul e vermelho)
+// função para configurar o PWM de um LED (genérica para azul e vermelho)
 void setup_pwm_led(uint led, uint *slice, uint16_t level)
 {
-  gpio_set_function(led, GPIO_FUNC_PWM); // Configura o pino do LED como saída PWM
-  *slice = pwm_gpio_to_slice_num(led);   // Obtém o slice do PWM associado ao pino do LED
-  pwm_set_clkdiv(*slice, DIVIDER_PWM);   // Define o divisor de clock do PWM
-  pwm_set_wrap(*slice, PERIOD);          // Configura o valor máximo do contador (período do PWM)
-  pwm_set_gpio_level(led, level);        // Define o nível inicial do PWM para o LED
-  pwm_set_enabled(*slice, true);         // Habilita o PWM no slice correspondente ao LED
+  gpio_set_function(led, GPIO_FUNC_PWM); // configura o pino do LED como saída PWM
+  *slice = pwm_gpio_to_slice_num(led);   // obtém o slice do PWM associado ao pino do LED
+  pwm_set_clkdiv(*slice, DIVIDER_PWM);   // define o divisor de clock do PWM
+  pwm_set_wrap(*slice, PERIOD);          // configura o valor máximo do contador (período do PWM)
+  pwm_set_gpio_level(led, level);        // define o nível inicial do PWM para o LED
+  pwm_set_enabled(*slice, true);         // habilita o PWM no slice correspondente ao LED
 }
+
+// função para ler os valores dos eixos do joystick (X e Y)
+void joystick_read_axis(uint16_t *vrx_value, uint16_t *vry_value)
+{
+  // leitura do valor do eixo X do joystick
+  adc_select_input(ADC_CHANNEL_0); // seleciona o canal ADC para o eixo X
+  sleep_us(2);                     // pequeno delay para estabilidade
+  *vrx_value = adc_read();         // lê o valor do eixo X (0-4095)
+
+  // leitura do valor do eixo Y do joystick
+  adc_select_input(ADC_CHANNEL_1); // seleciona o canal ADC para o eixo Y
+  sleep_us(2);                     // pequeno delay para estabilidade
+  *vry_value = adc_read();         // lê o valor do eixo Y (0-4095)
+}
+
+// função que desenha uma moldura no centro do display
+// void frame_in_display(uint8_t y, uint8_t x)
+// {
+
+//   ssd1306_fill(&ssd, false);                            // limpa o display
+//   ssd1306_rect(&ssd, y, x, 8, 8, true, true);           // Desenha o cursor
+//   ssd1306_rect(&ssd, 1, 1, 127, 63, true, false);       // desenha a borda mais externa da moldura
+//   ssd1306_rect(&ssd, 3, 3, 123, 59, hided_edge, false); // desenha a borda central da moldura
+//   ssd1306_rect(&ssd, 5, 5, 119, 55, true, false);       // desenha a borda interna da moldura
+//   ssd1306_send_data(&ssd);                              // aplica os novos dados e atualiza o display
+// }
 
 // Função de configuração geral
 void setup()
 {
-  stdio_init_all(); // Inicializa a porta serial para saída de dados
-  setup_joystick(); // Chama a função de configuração do joystick
-  setup_i2c();      // Configura e inicializa o I2C
+  stdio_init_all(); // inicializa a porta serial para saída de dados
+  setup_joystick(); // chama a função de configuração do joystick
+  setup_i2c();      // configura e inicializa o I2C
 
-  setup_pwm_led(LED_B, &slice_led_b, led_b_level); // Configura o PWM para o LED azul
-  setup_pwm_led(LED_R, &slice_led_r, led_r_level); // Configura o PWM para o LED vermelho
+  setup_pwm_led(LED_B, &slice_led_b, led_b_level); // configura o PWM para o LED azul
+  setup_pwm_led(LED_R, &slice_led_r, led_r_level); // configura o PWM para o LED vermelho
 
   gpio_init(LED_G);
   gpio_set_dir(LED_G, GPIO_OUT);
@@ -156,36 +182,11 @@ void setup()
   gpio_pull_up(BUTTON_BOOT);
 }
 
-// Função para ler os valores dos eixos do joystick (X e Y)
-void joystick_read_axis(uint16_t *vrx_value, uint16_t *vry_value)
-{
-  // Leitura do valor do eixo X do joystick
-  adc_select_input(ADC_CHANNEL_0); // Seleciona o canal ADC para o eixo X
-  sleep_us(2);                     // Pequeno delay para estabilidade
-  *vrx_value = adc_read();         // Lê o valor do eixo X (0-4095)
-
-  // Leitura do valor do eixo Y do joystick
-  adc_select_input(ADC_CHANNEL_1); // Seleciona o canal ADC para o eixo Y
-  sleep_us(2);                     // Pequeno delay para estabilidade
-  *vry_value = adc_read();         // Lê o valor do eixo Y (0-4095)
-}
-
-// função que desenha uma moldura no centro do display
-void frame_in_display(uint8_t y, uint8_t x)
-{
-
-  ssd1306_fill(&ssd, false);                            // limpa o display
-  ssd1306_rect(&ssd, 1, 1, 127, 63, true, false);       // desenha a borda mais externa da moldura
-  ssd1306_rect(&ssd, 3, 3, 123, 59, hided_edge, false); // desenha a borda central da moldura
-  ssd1306_rect(&ssd, 5, 5, 119, 55, true, false);       // desenha a borda interna da moldura
-  ssd1306_send_data(&ssd);                              // aplica os novos dados e atualiza o display
-}
-
-// Função principal
+// função principal
 int main()
 {
-  uint16_t vrx_value, vry_value, sw_value; // Variáveis para armazenar os valores do joystick (eixos X e Y) e botão
-  setup();                                 // Chama a função de configuração
+  uint16_t vrx_value, vry_value, sw_value; // variáveis para armazenar os valores do joystick (eixos X e Y) e botão
+  setup();                                 // chama a função de configuração
 
   // habilita as interrupções para os botão de boot, de ativação do pwm dos LEDs
   // e do botão de controle do LED verde e bordas exibidas no display
@@ -193,18 +194,31 @@ int main()
   gpio_set_irq_enabled_with_callback(SW, GPIO_IRQ_EDGE_FALL, true, &button_interruption_gpio_irq_handler);
   gpio_set_irq_enabled_with_callback(BUTTON_BOOT, GPIO_IRQ_EDGE_FALL, true, &button_interruption_gpio_irq_handler);
 
-  // Loop principal
+  // loop principal
   while (1)
   {
     joystick_read_axis(&vrx_value, &vry_value); // Lê os valores dos eixos do joystick
-    // Ajusta os níveis PWM dos LEDs de acordo com os valores do joystick
+    // ajusta os níveis PWM dos LEDs de acordo com os valores do joystick
     pwm_set_gpio_level(LED_B, remap_led_level(vrx_value)); // Ajusta o brilho do LED azul com o valor do eixo X
     pwm_set_gpio_level(LED_R, remap_led_level(vry_value)); // Ajusta o brilho do LED vermelho com o valor do eixo Y
 
-    // desenha no display uma moldura com um cursor (um retângulo 8x8) no centro do display
-    frame_in_display(vrx_value, vrx_value);
+    // ajuste de 4095 -> 4084 e 119 -> (127-8) 8 equivalente ao cursor /////////////////////////////////////////
+    // OBS: os eixos da minha placa estão invertidos
+    int x_cursor = (int)(((float)vry_value / 4084.0) * 119.0);
 
-    // Pequeno delay antes da próxima leitura
+    // ajuste de 4095 -> 4082 e 55 -> (63-8) 8 equivalente ao cursor
+    // é subtraído o valor de 55 para inverter o movimento do cursor no eixo y
+    int y_cursor = (int)(55 - (((float)vrx_value / 4082.0) * 55.0));
+
+    // desenha no display uma moldura com um cursor (um retângulo 8x8) no centro do display
+    ssd1306_fill(&ssd, false);                                // limpa o display
+    ssd1306_rect(&ssd, y_cursor, x_cursor, 8, 8, true, true); // Desenha o cursor
+    ssd1306_rect(&ssd, 1, 1, 127, 63, true, false);           // desenha a borda mais externa da moldura
+    ssd1306_rect(&ssd, 3, 3, 123, 59, hided_edge, false);     // desenha a borda central da moldura
+    ssd1306_rect(&ssd, 5, 5, 119, 55, true, false);           // desenha a borda interna da moldura
+    ssd1306_send_data(&ssd);
+
+    // pequeno delay antes da próxima leitura
     sleep_ms(100); // Espera 100 ms antes de repetir o ciclo
   }
 }
