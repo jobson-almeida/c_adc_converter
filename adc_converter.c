@@ -51,9 +51,11 @@ void button_interruption_gpio_irq_handler(uint gpio, uint32_t events)
       pwm_set_enabled(slice_led_b, pwm_status); // altera o status do pwm - habilita e ou desabilita
     }
 
-    if (gpio_get(SW) == 0) ////////////////////////////////////
+    if (gpio_get(SW) == 0)
     {
       // altera o estado do LED verde (ligado/desligado).
+      gpio_put(LED_G, !gpio_get(LED_G));
+      // BORDAS ??????????
     }
   }
   gpio_acknowledge_irq(gpio, events); // limpa a interrupção
