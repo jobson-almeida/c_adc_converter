@@ -93,9 +93,39 @@ void ssd1306_draw_char(ssd1306_t *ssd, char c, uint8_t x, uint8_t y);
 /// @param y Posição y (1 - 63) do display que se quer exibir o caracter
 void ssd1306_draw_string(ssd1306_t *ssd, const char *str, uint8_t x, uint8_t y);
 
+/// @brief Função para desenhar um retângulo no display
+/// @param ssd Instância do display SSD1306
+/// @param top Posição y (1-63) do retângulo
+/// @param left Posição x (1-127) do retângulo
+/// @param with Valor que define a largura do retângulo
+/// @param height Valor que define a altura do retângulo
+/// @param value Valor boleano que define se a cor preta ou branca será aplicada ao retângulo
+/// @param fill Valor boleano que define se o retângulao terá ou não preenchido com a cor branca ou preta
 void ssd1306_rect(ssd1306_t *ssd, uint8_t top, uint8_t left, uint8_t width, uint8_t height, bool value, bool fill);
+
+/// @brief Função para desenhar uma linha no display
+/// @param ssd Instância do display SSD1306
+/// @param x0 Posição inicial x (1-127) da linha
+/// @param y0 Posição inicial y (1-63) da linha
+/// @param x1 Posição final x (1-127) da linha
+/// @param y1 Posição final y (1-63) da linha
+/// @param value Valor que define a cor branca ou preta à linha
 void ssd1306_line(ssd1306_t *ssd, uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1, bool value);
+
+/// @brief Função para desenhar uma linha horizontal no display
+/// @param ssd Instância do display SSD1306
+/// @param x Posição x (1-127) da linha
+/// @param y0 Posição inicial y (1-63) da linha
+/// @param y1 Posição final y (1-63) da linha
+/// @param value Valor boleano que define a cor branca ou preta à linha
 void ssd1306_hline(ssd1306_t *ssd, uint8_t x0, uint8_t x1, uint8_t y, bool value);
+
+/// @brief Função para desenhar uma linha vertical no display
+/// @param ssd Instância do display SSD1306
+/// @param x Posição x (1 - 127) da linha
+/// @param y0 Posição inicial y (1 - 63) da linha 
+/// @param y1 Posição final y (1 - 63) da linha
+/// @param value Valor boleano que define a cor branca ou preta à linha
 void ssd1306_vline(ssd1306_t *ssd, uint8_t x, uint8_t y0, uint8_t y1, bool value);
 
 #endif
