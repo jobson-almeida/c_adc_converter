@@ -2,6 +2,7 @@
 #include "pico/stdlib.h"  // Biblioteca padrão do Raspberry Pi Pico
 #include "pico/bootrom.h" // Biblioteca de acesso a funções e dados no bootrom
 #include "hardware/adc.h" // Biblioteca para manipulação do ADC no RP2040
+#include "hardware/irq.h" // Biblioteca para controle de interrupções no RP2040
 #include "hardware/pwm.h" // Biblioteca para controle de PWM no RP2040
 
 // Definição dos pinos usados para o joystick e LEDs
@@ -23,6 +24,34 @@ const uint16_t PERIOD = 4096;   // Período do PWM (valor máximo do contador)
 
 uint16_t led_b_level, led_r_level = 100; // Inicialização dos níveis de PWM para os LEDs
 uint slice_led_b, slice_led_r;           // Variáveis para armazenar os slices de PWM correspondentes aos LEDs
+uint32_t last_time = 0;                  // variável de tempo, auxiliar À comtramedida deboucing
+
+// handler de interrupção dos botões
+void button_interruption_gpio_irq_handler(uint gpio, uint32_t events)
+{
+  uint32_t current_time = to_us_since_boot(get_absolute_time());
+  // verificar se passou tempo o bastante desde o último evento
+  if (current_time - last_time > 250000) // 250 ms de debouncing
+  {
+    last_time = current_time; // atualiza o tempo do último evento
+
+    if (gpio_get(BUTTON_BOOT) == 0)
+    {
+      // habilita o bootsel da placa - reinicia em modo gravação
+    }
+
+    if (gpio_get(BUTTON_A) == 0)
+    {
+      // habilita e desabilita o PWM dos LEDs vermelho e azul
+    }
+
+    if (gpio_get(SW) == 0) ////////////////////////////////////
+    {
+      // altera o estado do LED verde (ligado/desligado).
+    }
+  }
+  gpio_acknowledge_irq(gpio, events); // limpa a interrupção
+}
 
 // Função para configurar o joystick (pinos de leitura e ADC)
 void setup_joystick()
@@ -89,6 +118,12 @@ int main()
 {
   uint16_t vrx_value, vry_value, sw_value; // Variáveis para armazenar os valores do joystick (eixos X e Y) e botão
   setup();                                 // Chama a função de configuração
+
+  // habilita as interrupções para os botão de boot, de ativação do pwm dos LEDs
+  // e do botão de controle do LED verde e bordas exibidas no display
+  gpio_set_irq_enabled_with_callback(BUTTON_A, GPIO_IRQ_EDGE_FALL, true, &button_interruption_gpio_irq_handler);
+  gpio_set_irq_enabled_with_callback(SW, GPIO_IRQ_EDGE_FALL, true, &button_interruption_gpio_irq_handler);
+  gpio_set_irq_enabled_with_callback(BUTTON_BOOT, GPIO_IRQ_EDGE_FALL, true, &button_interruption_gpio_irq_handler);
 
   // Loop principal
   while (1)
