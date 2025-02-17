@@ -26,6 +26,8 @@ uint16_t led_b_level, led_r_level = 100; // Inicialização dos níveis de PWM p
 uint slice_led_b, slice_led_r;           // Variáveis para armazenar os slices de PWM correspondentes aos LEDs
 uint32_t last_time = 0;                  // variável de tempo, auxiliar À comtramedida deboucing
 
+volatile bool pwm_status = true; // variável auxiliar que define o status do PWM dos LEDs vermelho e azul
+
 // handler de interrupção dos botões
 void button_interruption_gpio_irq_handler(uint gpio, uint32_t events)
 {
@@ -44,6 +46,9 @@ void button_interruption_gpio_irq_handler(uint gpio, uint32_t events)
     if (gpio_get(BUTTON_A) == 0)
     {
       // habilita e desabilita o PWM dos LEDs vermelho e azul
+      pwm_status = !pwm_status;                 // inverte o valor da variável auxiliar que define o status do pwm
+      pwm_set_enabled(slice_led_r, pwm_status); // altera o status do pwm - habilita e ou desabilita
+      pwm_set_enabled(slice_led_b, pwm_status); // altera o status do pwm - habilita e ou desabilita
     }
 
     if (gpio_get(SW) == 0) ////////////////////////////////////
