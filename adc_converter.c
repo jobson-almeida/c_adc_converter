@@ -32,6 +32,7 @@ uint16_t led_b_level, led_r_level = 100; // inicialização dos níveis de PWM p
 uint slice_led_b, slice_led_r;           // variáveis para armazenar os slices de PWM correspondentes aos LEDs
 uint32_t last_time = 0;                  // variável de tempo, auxiliar À comtramedida deboucing
 ssd1306_t ssd;                           // instância do display SSD1306
+uint16_t vrx_value, vry_value;           // variáveis para armazenar os valores do joystick (eixos X e Y) e botão
 
 volatile bool hided_edge = true; // variável auxiliar que define o status da borda central da moldura
 volatile bool pwm_status = true; // variável auxiliar que define o status do PWM dos LEDs vermelho e azul
@@ -150,6 +151,8 @@ void joystick_read_axis(uint16_t *vrx_value, uint16_t *vry_value)
 // função que desenha uma moldura com um cursor no centro do display
 void cursor_in_frame(uint8_t x, uint8_t y)
 {
+  // printf("x %d\t y %d\n", x, y); // DEBUGGING
+
   // desenha no display uma moldura com um cursor (um retângulo 8x8) no centro do display
   ssd1306_fill(&ssd, false);                            // limpa o display
   ssd1306_rect(&ssd, y, x, 8, 8, true, true);           // Desenha o cursor
@@ -157,6 +160,28 @@ void cursor_in_frame(uint8_t x, uint8_t y)
   ssd1306_rect(&ssd, 3, 3, 123, 59, hided_edge, false); // desenha a borda central da moldura
   ssd1306_rect(&ssd, 5, 5, 119, 55, true, false);       // desenha a borda interna da moldura
   ssd1306_send_data(&ssd);                              // aplica os novos dados e atualiza o display
+}
+
+bool cursor_in_frame_repeating_timer_callback(struct repeating_timer *t)
+{
+  joystick_read_axis(&vrx_value, &vry_value); // Lê os valores dos eixos do joystick
+  // ajusta os níveis PWM dos LEDs de acordo com os valores do joystick
+  pwm_set_gpio_level(LED_B, remap_led_level(vrx_value)); // Ajusta o brilho do LED azul com o valor do eixo X
+  pwm_set_gpio_level(LED_R, remap_led_level(vry_value)); // Ajusta o brilho do LED vermelho com o valor do eixo Y
+
+  // ajuste de 4095 -> 4084 e 119 -> (127-8) 8 equivalente ao cursor
+  // OBS: os eixos da minha placa estão invertidos
+  int x_cursor = (int)(((float)vry_value / 4084.0) * 119.0);
+
+  // ajuste de 4095 -> 4081 e 55 -> (63-8) 8 equivalente ao cursor
+  // é subtraído o valor de 55 para inverter o movimento do cursor no eixo y
+  int y_cursor = (int)(55 - (((float)vrx_value / 4082.0) * 55.0));
+
+  // printf("%d %d\n", x_cursor, y_cursor);
+  // printf("%d %d\n", vrx_value, vry_value);
+
+  // chama a função que desenha no display a moldura e o cursor
+  cursor_in_frame(x_cursor, y_cursor);
 }
 
 // Função de configuração geral
@@ -185,8 +210,8 @@ void setup()
 // função principal
 int main()
 {
-  uint16_t vrx_value, vry_value, sw_value; // variáveis para armazenar os valores do joystick (eixos X e Y) e botão
-  setup();                                 // chama a função de configuração
+  // uint16_t vrx_value, vry_value; // variáveis para armazenar os valores do joystick (eixos X e Y) e botão
+  setup(); // chama a função de configuração
 
   // habilita as interrupções para os botão de boot, de ativação do pwm dos LEDs
   // e do botão de controle do LED verde e bordas exibidas no display
@@ -194,27 +219,14 @@ int main()
   gpio_set_irq_enabled_with_callback(SW, GPIO_IRQ_EDGE_FALL, true, &button_interruption_gpio_irq_handler);
   gpio_set_irq_enabled_with_callback(BUTTON_BOOT, GPIO_IRQ_EDGE_FALL, true, &button_interruption_gpio_irq_handler);
 
+  struct repeating_timer timer;
+  // timer de controle do cursor e controle das molduras
+  add_repeating_timer_ms(1000, cursor_in_frame_repeating_timer_callback, NULL, &timer);
+
   // loop principal
   while (1)
   {
-    joystick_read_axis(&vrx_value, &vry_value); // Lê os valores dos eixos do joystick
-    // ajusta os níveis PWM dos LEDs de acordo com os valores do joystick
-    pwm_set_gpio_level(LED_B, remap_led_level(vrx_value)); // Ajusta o brilho do LED azul com o valor do eixo X
-    pwm_set_gpio_level(LED_R, remap_led_level(vry_value)); // Ajusta o brilho do LED vermelho com o valor do eixo Y
-
-    // ajuste de 4095 -> 4084 e 119 -> (127-8) 8 equivalente ao cursor
-    // OBS: os eixos da minha placa estão invertidos
-    int x_cursor = (int)(((float)vry_value / 4084.0) * 119.0);
-
-    // ajuste de 4095 -> 4082 e 55 -> (63-8) 8 equivalente ao cursor
-    // é subtraído o valor de 55 para inverter o movimento do cursor no eixo y
-    int y_cursor = (int)(55 - (((float)vrx_value / 4082.0) * 55.0));
-
-    // chama a função que desenha no display a moldura e o cursor
-    cursor_in_frame(x_cursor, y_cursor);
-
-    // pequeno delay antes da próxima leitura
-    sleep_ms(100); // Espera 100 ms antes de repetir o ciclo
+    tight_loop_contents(); // boas práticas
   }
 
   return 0; // boas práticas
