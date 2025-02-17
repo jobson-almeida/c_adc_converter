@@ -210,7 +210,6 @@ void setup()
 // função principal
 int main()
 {
-  // uint16_t vrx_value, vry_value; // variáveis para armazenar os valores do joystick (eixos X e Y) e botão
   setup(); // chama a função de configuração
 
   // habilita as interrupções para os botão de boot, de ativação do pwm dos LEDs
