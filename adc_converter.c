@@ -33,7 +33,7 @@ uint slice_led_b, slice_led_r;           // Variáveis para armazenar os slices 
 uint32_t last_time = 0;                  // variável de tempo, auxiliar À comtramedida deboucing
 ssd1306_t ssd;                           // instância do display SSD1306
 
-volatile bool first_edge = true; // variável auxiliar que define qual borda está ativa no display
+volatile bool hided_edge = true; // variável auxiliar que define o status da borda central da moldura
 volatile bool pwm_status = true; // variável auxiliar que define o status do PWM dos LEDs vermelho e azul
 
 // handler de interrupção dos botões
@@ -63,7 +63,7 @@ void button_interruption_gpio_irq_handler(uint gpio, uint32_t events)
     {
       // altera o estado do LED verde (ligado/desligado).
       gpio_put(LED_G, !gpio_get(LED_G));
-      // BORDAS ??????????
+      hided_edge = !hided_edge; // escurece uma das linhas da moldura exibida no display o que altera o aspecto visual
     }
   }
   gpio_acknowledge_irq(gpio, events); // limpa a interrupção
@@ -174,11 +174,11 @@ void joystick_read_axis(uint16_t *vrx_value, uint16_t *vry_value)
 void frame_in_display(uint8_t y, uint8_t x)
 {
 
-  ssd1306_fill(&ssd, false);                      // Limpa o display
-  ssd1306_rect(&ssd, 1, 1, 127, 63, true, false); // Desenha a borda mais externa da moldura
-  ssd1306_rect(&ssd, 3, 3, 123, 59, true, false); // Desenha a borda central da moldura
-  ssd1306_rect(&ssd, 5, 5, 119, 55, true, false); // Desenha a borda interna da moldura
-  ssd1306_send_data(&ssd);                        // Atualiza o display
+  ssd1306_fill(&ssd, false);                            // limpa o display
+  ssd1306_rect(&ssd, 1, 1, 127, 63, true, false);       // desenha a borda mais externa da moldura
+  ssd1306_rect(&ssd, 3, 3, 123, 59, hided_edge, false); // desenha a borda central da moldura
+  ssd1306_rect(&ssd, 5, 5, 119, 55, true, false);       // desenha a borda interna da moldura
+  ssd1306_send_data(&ssd);                              // aplica os novos dados e atualiza o display
 }
 
 // Função principal
