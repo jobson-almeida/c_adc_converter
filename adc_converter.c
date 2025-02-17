@@ -20,6 +20,11 @@
 #define BUTTON_BOOT 6 // GPIO definida para uso do botão de bootsel - entrar em modo gravação
 #define BUTTON_A 5    // GPIO definida para o botão com a função de habilitar e desabilitar o PWM nos LEDs vermelho e azul
 
+#define I2C_PORT i2c1    // define a porta I2C a ser utilizada
+#define I2C_SDA 14       // GPIO definida para transmissão de dados do I2C
+#define I2C_SCL 15       // GPIO definida para transmissão do clock do I2C
+#define IC2_ADDRESS 0x3C // endereço do display SSD1306
+
 const float DIVIDER_PWM = 16.0; // Divisor fracional do clock para o PWM
 const uint16_t PERIOD = 4096;   // Período do PWM (valor máximo do contador)
 
