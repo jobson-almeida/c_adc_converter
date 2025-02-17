@@ -123,7 +123,7 @@ void ssd1306_hline(ssd1306_t *ssd, uint8_t x0, uint8_t x1, uint8_t y, bool value
 /// @brief Função para desenhar uma linha vertical no display
 /// @param ssd Instância do display SSD1306
 /// @param x Posição x (1 - 127) da linha
-/// @param y0 Posição inicial y (1 - 63) da linha 
+/// @param y0 Posição inicial y (1 - 63) da linha
 /// @param y1 Posição final y (1 - 63) da linha
 /// @param value Valor boleano que define a cor branca ou preta à linha
 void ssd1306_vline(ssd1306_t *ssd, uint8_t x, uint8_t y0, uint8_t y1, bool value);
