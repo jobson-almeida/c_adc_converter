@@ -220,7 +220,7 @@ int main()
 
   struct repeating_timer timer;
   // timer de controle do cursor e controle das molduras
-  add_repeating_timer_ms(1000, cursor_in_frame_repeating_timer_callback, NULL, &timer);
+  add_repeating_timer_ms(100, cursor_in_frame_repeating_timer_callback, NULL, &timer);
 
   // loop principal
   while (1)
