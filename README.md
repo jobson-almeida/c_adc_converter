@@ -14,6 +14,4 @@ Adicionalmente, o botão do joystick permite alternar o estado do LED Verde a ca
 
 Finalmente, o botão A, o push button à esquerda da placa, coube a funcionalidade de ativar e desativar os LEDs PWM, a cada acionamento.
 
-Para eese desenvolvimento foram aplicados alguns requisitos, tais como o uso de interrupções (IRQ) e contramedidas deboucing, via software, nas funcionalidades relacionadas aos botões. Além disso, um timer repetitivo foi utilizado opcionalmente na execução e controle do cursor e a alternância das molduras, uma eestratégia eficiente à liberação do loop na função main para quaisquer outras responsabilidades. 
-
-O resultado pode do estudo pode ser conferido no link [https://youtu.be/FfLkwNcMmj0](https://youtu.be/FfLkwNcMmj0)
+Para eese desenvolvimento foram aplicados alguns requisitos, tais como o uso de interrupções (IRQ) e contramedidas deboucing, via software, nas funcionalidades relacionadas aos botões. Além disso, um timer repetitivo foi utilizado opcionalmente na execução e controle do cursor e a alternância das molduras, uma eestratégia eficiente à liberação do loop na função main para quaisquer outras responsabilidades.
